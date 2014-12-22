@@ -1,6 +1,10 @@
 var CubeGrid = (function() {
     // 3D Array representation of the Cube
-    // Each square has 3 rows
+    // Each square has N rows
+
+    ROW_SIZE = 4;
+    NUM_BOXES = Math.pow(ROW_SIZE,3);
+    SQUARE_SIZE = Math.pow(ROW_SIZE,2);
 
     var cube,
         shiftRight,
@@ -10,13 +14,30 @@ var CubeGrid = (function() {
         shiftUp,
         shiftDown,
         shiftBackward,
-        shiftForward
+        shiftForward;
+
+    var toXYZ(pos) = function() {
+        var x, y, z;
+
+        x = pos % ROW_SIZE;
+        z = Math.floor(pos/ROW_SIZE);
+        y = Math.floor((pos - (z * SQUARE_SIZE)) / ROW_SIZE);
+
+        return {
+            x: x,
+            y: y,
+            z: z
+        }
+    };
 
     var Box = (function() {
         var x,y,z, position,
             value,
             moveTo,
-            animate;
+            animate,
+            cube,
+            getPosition,
+            setPosition;
 
         position = {x:0,y:0,z:0};
 
@@ -31,74 +52,125 @@ var CubeGrid = (function() {
             console.log("animate unimplemented");  
         };
 
+        cube = function() {
+            value = Math.pow(value,3);
+        };
+
+        getPosition = function() {
+            return position;
+        };
+
+        setPosition = function(pos) {
+            position.x = pos.x;
+            position.y = pos.y;
+            position.z = pos.z;
+        }
+
 
 
         return {
             moveTo: moveTo,
             animate: animate,
             value: value,
-            position: position
+            position: position,
+            cube: cube,
+            getPosition: getPosition,
+            setPosition: setPosition
         }
     }());
 
-    debugger;
-    var cube = [
-                 //square 1
-                [[ 3 , 0 , 0 ],
-                 [ 3 , 3 , 3 ],
-                 [ 3 , 0 , 3]],
-                //square 2
-                [[ 0 , 9 , 3 ],
-                 [ 3 , 0 , 0 ],
-                 [ 0 , 3 , 0 ]],
-                //square 3
-                [[ 0 , 0 , 3 ],
-                 [ 3 , 0 , 0 ],
-                 [ 0 , 3 , 0 ]]];
-
-    var reset = function() {
-        cube = [
-                 //square 1
-                [[ 0 , 0 , 0 ],
-                 [ 3 , 9 , 0 ],
-                 [ 0 , 0 , 0]],
-                //square 2
-                [[ 0 , 0 , 0 ],
-                 [ 9, 3 , 3 ],
-                 [ 0 , 0 , 0]],
-                //square 3
-                [[ 0 , 0 , 0 ],
-                 [ 0 , 3 , 3 ],
-                 [ 0 , 0 , 0 ]]];
+    var newBox = function(x,y,z) {
+        var box = Object.create(Box);
+        box.position.x = x;
+        box.position.y = y;
+        box.position.z = z;
+        return box;
     };
 
-    var shiftRight = function() {
-        console.log("shift right");
-        printCube();
-        var row, square,
-            i,j,k,
-            firstShift;
-        for (i = 0; i < cube.length; i++) {
-            square = cube[i];
-            for (j = 0; j < square.length; j++) {
-                row = square[j];
-                firstShift = true;
-                for (k = row.length-2; k >= 0; k--) {
+    var newEmptyBox = function() {
+        var F = Object.create(Box);
+        F.value = 0;
+        return F;
+    };
 
-                    if(row[k+1] === row[k]){
-                        row[k+1] = row[k+1]*row[k+1];
-                        row[k] = 0;
+
+
+    blocks = [];
+
+    for (var i = 0; i < cubeSize; i++) {
+        blocks[i] = newEmptyBox();
+    };
+
+    blocks[8] = newBox();
+
+    cube = [
+                 //square 1
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]],
+                //square 2
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]],
+                //square 3
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]]
+
+            ];
+    reset = function() {
+        cube = [
+                 //square 1
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newBox()      , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]],
+                //square 2
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]],
+                //square 3
+                [[ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox() ],
+                 [ newEmptyBox() , newEmptyBox() , newEmptyBox()]]
+
+                ];
+    };
+    //thanks to qwook for the idea
+    //https://github.com/qwook/4096/blob/master/src/game.js
+
+    lineTrace = function(xOrigin,yOrigin,zOrigin,dir) {
+        var 
+    }
+
+    shiftRight = function() {
+        console.log("shift right");
+        var row, square,
+            z,x,y,
+            firstShift;
+        for (z = 0; z < cube.length; z++) {
+            square = cube[z];
+            for (y = 0; y < square.length; y++) {
+                row = square[y];
+                firstShift = true;
+                for (x = row.length-2; x >= 0; x--) {
+
+                    if(row[x+1].value === row[x].value){
+                        row[x+1].cube();
+                        row[x].value = 0;
                         firstShift = false;
-                    } else if (row[k+1] === 0) {
-                        if (row[k+2] == 0) {
-                            row[k+2] = row[k];
-                            row[k] = 0;
-                        } else if (row[k+2] === row[k] && firstShift === true) {
-                            row[k+2] = row[k+2] * row[k+2];
-                            row[k] = 0;
+                    } else if (row[x+1].value === 0) {
+                        if (row[x+2] && row[x+2].value == 0) {
+                            //should row[x].moveTo() row[x+2].position
+                            row[x+2].value = row[x].value;
+                            row[x] = 0;
+                        } else if (row[x+2] === row[x] && firstShift === true) {
+                            //should shift over
+                            row[x+2].cube();
+                            row[x].value = 0;
                         } else {
-                            row[k+1] = row[k];
-                            row[k] = 0;
+                            //should moveTo
+                            row[x+1].value = row[x].value;
+                            row[x].value = 0;
                             firstShift = false;
                         };
                     };
@@ -106,7 +178,7 @@ var CubeGrid = (function() {
             };
         };
     }
-    var shiftLeft = function() {
+    shiftLeft = function() {
         console.log("shift left");
         var row, square,
             i,j,k,
@@ -139,7 +211,7 @@ var CubeGrid = (function() {
         };
     }
 
-    var shiftUp = function() {
+    shiftUp = function() {
         console.log("shift up");
         var row, square,
             prow, frow, //prev row, first row
@@ -180,7 +252,7 @@ var CubeGrid = (function() {
         };
     }
 
-    var shiftDown = function() {
+    shiftDown = function() {
         console.log("shift down");
         var row, square,
             prow, frow, //prev row, first row
@@ -221,7 +293,7 @@ var CubeGrid = (function() {
         };
     }
 
-    var shiftBackward = function() {
+    shiftBackward = function() {
         console.log("shift backward");
 
         var row, square,
@@ -275,7 +347,7 @@ var CubeGrid = (function() {
         }
     }
 
-    var shiftForward = function () {
+    shiftForward = function () {
         console.log("shiftForward");
         var row, square,
             rowLength = cube[0][0].length,
@@ -324,25 +396,25 @@ var CubeGrid = (function() {
         }
     }
 
-    var printCube = function() {
+    printCube = function() {
         var i,j,k,
-            str="";
+            str="\n";
         for (i = 0; i < cube.length; i++) {
             square = cube[i];
             for (j = 0; j < square.length; j++) {
                 row = square[j];
                 for (k = 0; k < row.length; k++) {
-                    if(row[k]===undefined){
-
+                    if(row[k]===undefined || row[k] === 0){
+                        str+= 0 + " ";
                     } else {
-                        str+= row[k] + "  ";
+                        str+= row[k].value + "  ";
                     }
                 };
                 str += "\n";
             };
             str +="\n";
         };
-        console.log(str + "\n");
+        console.log(str);
     }
 
     return {
@@ -356,3 +428,7 @@ var CubeGrid = (function() {
         shiftForward: shiftForward
     }
 }());
+
+CubeGrid.printCube();
+CubeGrid.shiftRight();
+CubeGrid.printCube();
