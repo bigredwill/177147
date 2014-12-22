@@ -5,7 +5,7 @@ var CubeGrid = (function() {
     //CONSTANTS
     var DIM, ROW_SIZE, NUM_BOXES, SQUARE_SIZE;
 
-    DIM = ROW_SIZE = 3;
+    DIM = ROW_SIZE = 4;
     NUM_BOXES = Math.pow(ROW_SIZE,3);
     SQUARE_SIZE = Math.pow(ROW_SIZE,2);
 
@@ -55,6 +55,7 @@ var CubeGrid = (function() {
         };
 
         animate = function () {
+            //for moving effect
             console.log("animate unimplemented");  
         };
 
@@ -63,16 +64,17 @@ var CubeGrid = (function() {
         };
 
         getPosition = function() {
-            return position;
+            return this.position;
         };
 
         setPosition = function(pos) {
-            position.x = pos.x;
-            position.y = pos.y;
-            position.z = pos.z;
+            this.position.x = pos.x;
+            this.position.y = pos.y;
+            this.position.z = pos.z;
         };
 
         destroy = function() {
+            //add in animation
             console.log("destroyed");
         };
 
@@ -109,12 +111,9 @@ var CubeGrid = (function() {
         for (i = 0; i < NUM_BOXES; i++) {
             boxes[i] = newEmptyBox();
         };
-        boxes[0] = newBox();
-        boxes[3] = newBox();
-        boxes[8] = newBox();
-        boxes[12] = newBox();
-        boxes[26] = newBox();
-        boxes[26-6] = newBox();
+        for(i = 0; i < 4; i++) {
+            boxes[Math.floor(Math.random()*NUM_BOXES-1)] = newBox();
+        }
     };
 
     //for debugging purposes
@@ -269,13 +268,14 @@ var CubeGrid = (function() {
 
     shiftForward = function () {
         console.log("shiftForward");
-        var row, square,
-            rowLength = cube[0][0].length,
-            squareHeight = cube[0].length,
-            cubeLength = cube.length,
-            cur, prev, first, //current row, prev row, first row
-            firstShift,
-            c,s,r,b;
+        
+        var y,x,
+            firstShift;
+        for(y = SQUARE_SIZE; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for(x = y; x < y+SQUARE_SIZE; x++) {
+                firstShift = checkAhead(x, -1, SQUARE_SIZE, 0);
+            }
+        }
         
     }
 
@@ -305,5 +305,5 @@ var CubeGrid = (function() {
 
 CubeGrid.reset();
 CubeGrid.printCube();
-CubeGrid.shiftBackward();
+CubeGrid.shiftForward();
 CubeGrid.printCube();
