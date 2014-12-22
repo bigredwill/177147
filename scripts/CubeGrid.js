@@ -5,7 +5,7 @@ var CubeGrid = (function() {
     //CONSTANTS
     var DIM, ROW_SIZE, NUM_BOXES, SQUARE_SIZE;
 
-    DIM = ROW_SIZE = 4;
+    DIM = ROW_SIZE = 3;
     NUM_BOXES = Math.pow(ROW_SIZE,3);
     SQUARE_SIZE = Math.pow(ROW_SIZE,2);
 
@@ -110,9 +110,11 @@ var CubeGrid = (function() {
             boxes[i] = newEmptyBox();
         };
         boxes[0] = newBox();
-        boxes[11] = newBox();
+        boxes[3] = newBox();
         boxes[8] = newBox();
-        boxes[9] = newBox();
+        boxes[12] = newBox();
+        boxes[26] = newBox();
+        boxes[26-6] = newBox();
     };
 
     //for debugging purposes
@@ -145,18 +147,20 @@ var CubeGrid = (function() {
             movedBox;
 
 
-        if(initVal === 0) {
+        if(i< 0 || initVal === 0) {
             return {
                 position: pos,
                 hit: didHit
             }
         }
+        
 
         //start one ahead of current box we're checking for
         //since we can be iterating towards the front of the array,
         //stop may be less than start, so multiply by direction to make check positive
         for (i = start + (skip*dir); (stop-i)*dir >= 0; i+= skip*dir) {
             // console.log("\t"+ i + " " + (stop-i)*dir);
+            debugger;
             if(boxes[i].value===initVal) {
                 // console.log(i+ " ");
                 debugger;
@@ -230,136 +234,35 @@ var CubeGrid = (function() {
     //right left working
     shiftUp = function() {
         console.log("shift up");
-        var row, square,
-            prow, frow, //prev row, first row
-            i,j,k,
+        var y,x,
             firstShift;
-        for (m = 0; m < cube.length; m++) {
-            square = cube[m];
-            for (j = 0; j < square[0].length; j++) {
-                firstShift = true;
-                for (k = 1; k < square.length; k++) {
-                    row = square[k];
-                    prow = square[k-1];
-                    frow = square[k-2];
-                    if(prow[j] === row[j]){
-                        prow[j] = prow[j]*prow[j];
-                        row[j] = 0;
-                        firstShift = false; 
-                    } else if (prow[j] === 0) {
-                        if(square[k-2]){
-                            if (square[k-2][j] === 0) {
-                            square[k-2][j] = row[j];
-                            row[j] = 0;
-                            } else if (square[k-2] === row[j] && firstShift == true) {
-                                square[k-2][j] = square[k-2] * square[k-2][j];
-                                row[j] = 0;
-                            } else {
-                                prow[j] = row[j];
-                                row[j] = 0;
-                                firstShift = false;
-                            }
-                        } else {
-                            prow[j] = row[j];
-                            row[j] = 0;
-                        };
-                    };
-                };
-            };
-        };
+
+        for(y = 0; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for(x = (y + DIM); x < (y+SQUARE_SIZE); x++) {
+                firstShift = checkAhead(x, -1, DIM, y);
+            }
+        }
     }
 
     shiftDown = function() {
         console.log("shift down");
-        var row, square,
-            prow, frow, //prev row, first row
-            i,j,k,
+        var y,x,
             firstShift;
-        for (m = 0; m < cube.length; m++) {
-            square = cube[m];
-            for (j = 0; j < square[0].length; j++) {
-                firstShift = true;
-                for (k = 1; k >= 0; k--) {
-                    row = square[k];
-                    prow = square[k+1];
-                    frow = square[k+2];
-                    if(prow[j] === row[j]){
-                        prow[j] = prow[j]*prow[j];
-                        row[j] = 0;
-                        firstShift = false; 
-                    } else if (prow[j] === 0) {
-                        if(square[k+2]){
-                            if (square[k+2][j] === 0) {
-                                square[k+2][j] = row[j];
-                                row[j] = 0;
-                            } else if (square[k+2] === row[j] && firstShift === true) {
-                                square[k+2][j] = square[k+2] * square[k+2][j];
-                                row[j] = 0;
-                            } else {
-                                prow[j] = row[j];
-                                row[j] = 0;
-                                firstShift = false; 
-                            }
-                        } else {
-                            prow[j] = row[j];
-                            row[j] = 0;
-                        };
-                    };
-                };
-            };
-        };
+        for(y = SQUARE_SIZE-1; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for(x = y - DIM; x > y - SQUARE_SIZE; x--) {
+                firstShift = checkAhead(x, 1, DIM, y);
+            }
+        }
     }
 
     shiftBackward = function() {
         console.log("shift backward");
 
-        var row, square,
-            rowLength = cube[0][0].length,
-            squareHeight = cube[0].length,
-            cubeLength = cube.length,
-            cur, prev, first, //current row, prev row, first row
-            firstShift,
-            c,s,r,b;
-
-            //iterate through all rows in square
-        for(s = squareHeight-1; s > 0; s--) {
-            //iterate through row
-            for(r = 0; r < rowLength; r++) {
-                //push through squares to back of cube
-                firstShift = true;
-                for(b = 1; b >= 0; b--) {
-                    cur = cube[b][s][r];
-                    prev = cube[b+1][s][r];
-                    try {
-                        first = cube[b+2][s][r];
-                    } catch (e) {
-                        first = -1;
-                    }
-                    if(prev === cur){
-                        cube[b+1][s][r] = prev*prev;
-                        cube[b][s][r] = 0;
-                        firstShift = false;
-                    } else if (prev === 0) {
-                        if(first !== -1){
-                            if (first === 0) {
-                                cube[b+2][s][r] = cur;
-                                cube[b][s][r] = 0;
-                            } else if (first === cur && firstShift === true) {
-                                cube[b+2][s][r] = first * first;
-                                cube[b][s][r] = 0;
-                            } else {
-                                // debugger;
-                                cube[b+1][s][r] = cur;
-                                cube[b][s][r] = 0;
-                                firstShift = false;
-                            }
-                        } else {
-                            cube[b+1][s][r] = cur;
-                            cube[b][s][r] = 0;
-                        };
-                    };
-
-                }
+        var y,x,
+            firstShift;
+        for(y = NUM_BOXES-SQUARE_SIZE; y > 0; y -= SQUARE_SIZE) {
+            for(x = y; x >= y-SQUARE_SIZE; x--) {
+                firstShift = checkAhead(x, 1, SQUARE_SIZE, NUM_BOXES-1);
             }
         }
     }
@@ -395,7 +298,12 @@ var CubeGrid = (function() {
 // CubeGrid.shiftRight();
 // CubeGrid.printCube();
 
+// CubeGrid.reset();
+// CubeGrid.printCube();
+// CubeGrid.shiftLeft();
+// CubeGrid.printCube();
+
 CubeGrid.reset();
 CubeGrid.printCube();
-CubeGrid.shiftLeft();
+CubeGrid.shiftBackward();
 CubeGrid.printCube();
