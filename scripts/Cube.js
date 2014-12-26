@@ -1,14 +1,16 @@
-var CubeGrid = (function() {
-    // 3D Array representation of the Cube
-    // Each square has N rows
+var Cube = (function(init) {
+
 
     //CONSTANTS
-    var DIM, ROW_SIZE, NUM_BOXES, SQUARE_SIZE;
+    var DIM, ROW_SIZE, NUM_BOXES, SQUARE_SIZE, SCALE;
 
-    DIM = ROW_SIZE = 4;
-    NUM_BOXES = Math.pow(ROW_SIZE,3);
-    SQUARE_SIZE = Math.pow(ROW_SIZE,2);
+    DIM = ROW_SIZE = init.dim;
+    NUM_BOXES = Math.pow(ROW_SIZE, 3);
+    SQUARE_SIZE = Math.pow(ROW_SIZE, 2);
 
+    SCALE = init.scale;
+
+    //
     var boxes = [];
 
     var blocks,
@@ -25,42 +27,63 @@ var CubeGrid = (function() {
     var toXYZ = function(pos) {
         var x, y, z;
 
-        x = pos % ROW_SIZE;
-        z = Math.floor(pos/ROW_SIZE);
-        y = Math.floor((pos - (z * SQUARE_SIZE)) / ROW_SIZE);
+
+        z = 1 + ((pos - (pos % SQUARE_SIZE)) / SQUARE_SIZE);
+        y = 1 + (((pos - (pos % ROW_SIZE)) / ROW_SIZE) % SQUARE_SIZE % ROW_SIZE);
+        x = 1 + ((pos) % ROW_SIZE);
 
         return {
-            x: x,
-            y: y,
-            z: z
+            x: x * SCALE ,
+            y: y * SCALE * -1,
+            z: z * SCALE * -1
         }
     };
 
     var Box = (function() {
-        var x,y,z,
+        var x, y, z,
             moveTo,
             animate,
             cube,
             destroy,
             getPosition,
-            setPosition;
+            setPosition,
+            createGeometry;
 
-        this.position = {x:0,y:0,z:0};
-        this.value = 3;
+        this.position = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
 
-        // value = 3;
+        this.value = DIM;
+
+        createGeometry = function() {
+            var geometry = new THREE.BoxGeometry(4, 4, 4);
+
+            var material = new THREE.MeshLambertMaterial();
+            var cube = new THREE.Mesh(geometry, material);
+
+            console.log("x: "+ this.position.x + " y: "+this.position.y + " z: "+ this.position.z);
+
+            cube.position.x = this.position.x;
+            cube.position.y = this.position.y;
+            cube.position.z = this.position.z;
+
+            scene.add(cube);
+            toUpdate.push(cube);
+        }
 
         moveTo = function(pos) {
             this.position = pos;
         };
 
-        animate = function () {
+        animate = function() {
             //for moving effect
-            console.log("animate unimplemented");  
+            console.log("animate unimplemented");
         };
 
         cube = function() {
-            this.value = Math.pow(this.value,3);
+            this.value = Math.pow(this.value, 3);
         };
 
         getPosition = function() {
@@ -87,15 +110,19 @@ var CubeGrid = (function() {
             cube: cube,
             getPosition: getPosition,
             setPosition: setPosition,
-            destroy: destroy
+            destroy: destroy,
+            createGeometry: createGeometry
         }
     }());
 
-    var newBox = function(x,y,z) {
+    var newBox = function(pos) {
         var box = Object.create(Box);
-        box.position.x = x;
-        box.position.y = y;
-        box.position.z = z;
+        // box.position.x = pos.x;
+        // box.position.y = pos.y;
+        // box.position.z = pos.z;
+        debugger;
+        box.setPosition(pos);
+        box.createGeometry();
         return box;
     };
 
@@ -108,25 +135,22 @@ var CubeGrid = (function() {
     reset = function() {
         var i;
         boxes = [];
-        for (i = 0; i < NUM_BOXES; i++) {
-            boxes[i] = newEmptyBox();
+        for (i = 0; i < 3 * SQUARE_SIZE; i++) {
+            boxes[i] = newBox(toXYZ(i));
         };
-        for(i = 0; i < 4; i++) {
-            boxes[Math.floor(Math.random()*NUM_BOXES-1)] = newBox();
-        }
     };
 
     //for debugging purposes
     //visualization inside console
     printCube = function() {
         var i,
-            str="\n";
+            str = "\n";
         for (i = 0; i < boxes.length; i++) {
             if (i !== 0 && i % ROW_SIZE === 0) {
-                str+="\n";
+                str += "\n";
             }
-            if(i !== 0 && i % SQUARE_SIZE === 0) {
-                str+="\n";
+            if (i !== 0 && i % SQUARE_SIZE === 0) {
+                str += "\n";
             }
             str += boxes[i].value + " ";
         };
@@ -139,30 +163,28 @@ var CubeGrid = (function() {
     //skip:     integer [1 = RIGHT/LEFT,DIM = UP/DOWN, SQUARE_SIZE = FRONT/BACK]
     //stop:     position of block to stop at, inclusive
     checkAhead = function(start, dir, skip, stop) {
-        var i, 
-            pos = start, 
+        var i,
+            pos = start,
             didHit = false,
             initVal = boxes[start].value,
             movedBox;
 
 
-        if(i< 0 || initVal === 0) {
+        if (i < 0 || initVal === 0) {
             return {
                 position: pos,
                 hit: didHit
             }
         }
-        
+
 
         //start one ahead of current box we're checking for
         //since we can be iterating towards the front of the array,
         //stop may be less than start, so multiply by direction to make check positive
-        for (i = start + (skip*dir); (stop-i)*dir >= 0; i+= skip*dir) {
-            // console.log("\t"+ i + " " + (stop-i)*dir);
-            debugger;
-            if(boxes[i].value===initVal) {
-                // console.log(i+ " ");
-                debugger;
+        for (i = start + (skip * dir);
+            (stop - i) * dir >= 0; i += skip * dir) {
+
+            if (boxes[i].value === initVal) {
                 didHit = true;
                 pos = i;
                 movedBox = boxes[start];
@@ -176,17 +198,15 @@ var CubeGrid = (function() {
                     position: pos,
                     hit: didHit
                 }
-            } else if(boxes[i].value === 0) {
+            } else if (boxes[i].value === 0) {
                 didHit = false;
                 pos = i;
             } else {
-                debugger;
                 didHit = true;
                 pos = i;
                 boxes[start].moveTo(toXYZ(i));
-                boxes[i - (skip*dir)] = boxes[start];
+                boxes[i - (skip * dir)] = boxes[start];
                 boxes[start] = newEmptyBox();
-
                 return {
                     position: pos,
                     hit: didHit
@@ -196,7 +216,7 @@ var CubeGrid = (function() {
 
         //move box to end
         boxes[start].moveTo(toXYZ(i));
-        boxes[i - (skip*dir)] = boxes[start];
+        boxes[i - (skip * dir)] = boxes[start];
         boxes[start] = newEmptyBox();
         return {
             position: pos,
@@ -207,11 +227,11 @@ var CubeGrid = (function() {
     shiftRight = function() {
         console.log("shift right");
         var row, square,
-            z,x,y,
+            z, x, y,
             firstShift;
-        for(x = DIM-1; x < NUM_BOXES; x+=DIM) {
-            for (var i = (x-1); i > x - DIM; i--) {
-                firstShift = checkAhead(i,1,1,x);
+        for (x = DIM - 1; x < NUM_BOXES; x += DIM) {
+            for (var i = (x - 1); i > x - DIM; i--) {
+                firstShift = checkAhead(i, 1, 1, x);
             }
         }
     }
@@ -219,13 +239,13 @@ var CubeGrid = (function() {
     shiftLeft = function() {
         console.log("shift left");
         var row, square,
-            i,j,k,x,
+            i, j, k, x,
             firstShift;
 
 
-        for(x = 0; x < NUM_BOXES; x+= DIM) {
-            for(i = (x+1); i < x + DIM; i++) {
-                firstShift = checkAhead(i,-1,1,x);
+        for (x = 0; x < NUM_BOXES; x += DIM) {
+            for (i = (x + 1); i < x + DIM; i++) {
+                firstShift = checkAhead(i, -1, 1, x);
             }
         }
     }
@@ -233,11 +253,11 @@ var CubeGrid = (function() {
     //right left working
     shiftUp = function() {
         console.log("shift up");
-        var y,x,
+        var y, x,
             firstShift;
 
-        for(y = 0; y < NUM_BOXES; y += SQUARE_SIZE) {
-            for(x = (y + DIM); x < (y+SQUARE_SIZE); x++) {
+        for (y = 0; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for (x = (y + DIM); x < (y + SQUARE_SIZE); x++) {
                 firstShift = checkAhead(x, -1, DIM, y);
             }
         }
@@ -245,10 +265,10 @@ var CubeGrid = (function() {
 
     shiftDown = function() {
         console.log("shift down");
-        var y,x,
+        var y, x,
             firstShift;
-        for(y = SQUARE_SIZE-1; y < NUM_BOXES; y += SQUARE_SIZE) {
-            for(x = y - DIM; x > y - SQUARE_SIZE; x--) {
+        for (y = SQUARE_SIZE - 1; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for (x = y - DIM; x > y - SQUARE_SIZE; x--) {
                 firstShift = checkAhead(x, 1, DIM, y);
             }
         }
@@ -257,26 +277,26 @@ var CubeGrid = (function() {
     shiftBackward = function() {
         console.log("shift backward");
 
-        var y,x,
+        var y, x,
             firstShift;
-        for(y = NUM_BOXES-SQUARE_SIZE; y > 0; y -= SQUARE_SIZE) {
-            for(x = y; x >= y-SQUARE_SIZE; x--) {
-                firstShift = checkAhead(x, 1, SQUARE_SIZE, NUM_BOXES-1);
+        for (y = NUM_BOXES - SQUARE_SIZE; y > 0; y -= SQUARE_SIZE) {
+            for (x = y; x >= y - SQUARE_SIZE; x--) {
+                firstShift = checkAhead(x, 1, SQUARE_SIZE, NUM_BOXES - 1);
             }
         }
     }
 
-    shiftForward = function () {
+    shiftForward = function() {
         console.log("shiftForward");
-        
-        var y,x,
+
+        var y, x,
             firstShift;
-        for(y = SQUARE_SIZE; y < NUM_BOXES; y += SQUARE_SIZE) {
-            for(x = y; x < y+SQUARE_SIZE; x++) {
+        for (y = SQUARE_SIZE; y < NUM_BOXES; y += SQUARE_SIZE) {
+            for (x = y; x < y + SQUARE_SIZE; x++) {
                 firstShift = checkAhead(x, -1, SQUARE_SIZE, 0);
             }
         }
-        
+
     }
 
     return {
@@ -289,21 +309,11 @@ var CubeGrid = (function() {
         shiftBackward: shiftBackward,
         shiftForward: shiftForward
     }
-}());
+}({
+    scale: 10,
+    dim: 3
+}));
 
 //testing
-// CubeGrid.reset();
-// CubeGrid.printCube();
-// CubeGrid.shiftRight();
-// CubeGrid.shiftRight();
-// CubeGrid.printCube();
-
-// CubeGrid.reset();
-// CubeGrid.printCube();
-// CubeGrid.shiftLeft();
-// CubeGrid.printCube();
-
-CubeGrid.reset();
-CubeGrid.printCube();
-CubeGrid.shiftForward();
-CubeGrid.printCube();
+Cube.reset();
+Cube.printCube();
