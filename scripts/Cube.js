@@ -32,10 +32,15 @@ var Cube = (function(init) {
         y = 1 + (((pos - (pos % ROW_SIZE)) / ROW_SIZE) % SQUARE_SIZE % ROW_SIZE);
         x = 1 + ((pos) % ROW_SIZE);
 
+        x = x * SCALE;
+        y = y * SCALE * -1;
+        z = z * SCALE * -1;
+
+        // console.log("pos: "+ pos +" x: " + x + " y: " + y + " z: " + z);
         return {
-            x: x * SCALE ,
-            y: y * SCALE * -1,
-            z: z * SCALE * -1
+            x: x,
+            y: y,
+            z: z 
         }
     };
 
@@ -47,7 +52,10 @@ var Cube = (function(init) {
             destroy,
             getPosition,
             setPosition,
-            createGeometry;
+            createGeometry,
+            update;
+
+        this.boxGeometry;
 
         this.position = {
             x: 0,
@@ -55,35 +63,74 @@ var Cube = (function(init) {
             z: 0
         };
 
+        this.oldposition = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
+
+        this.tween;
+
+
         this.value = DIM;
 
         createGeometry = function() {
-            var geometry = new THREE.BoxGeometry(4, 4, 4);
 
-            var material = new THREE.MeshLambertMaterial();
-            var cube = new THREE.Mesh(geometry, material);
+            this.boxGeometry = {};
+            this.boxGeometry.geometry = new THREE.BoxGeometry(4, 4, 4);
 
-            console.log("x: "+ this.position.x + " y: "+this.position.y + " z: "+ this.position.z);
+            this.boxGeometry.material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, shading: THREE.FlatShading });
+            var cube = new THREE.Mesh(this.boxGeometry.geometry, this.boxGeometry.material);
+
+            // console.log("x: "+ this.position.x + " y: "+this.position.y + " z: "+ this.position.z);
 
             cube.position.x = this.position.x;
             cube.position.y = this.position.y;
             cube.position.z = this.position.z;
-
-            scene.add(cube);
-            toUpdate.push(cube);
-        }
+            this.boxGeometry.cube = cube;
+            scene.add(this.boxGeometry.cube);
+        };
 
         moveTo = function(pos) {
+            this.oldposition = this.position;
             this.position = pos;
+
+            var position = this.oldposition;
+            var target = pos;
+            // debugger;
+            // this.tween = new TWEEN.Tween(position).to(target, 1000);
+            // this.tween = new TWEEN.Tween(position).to(target, 1000);
+            this.tween = new TWEEN.Tween({
+                x: "10"
+            }).to({
+                x: "20"
+            }, 1000);
+            var that = this;
+            this.tween.onUpdate(function(){
+                //tween object is not getting passed through
+                debugger;
+                if(position) {
+                    that.boxGeometry.cube.position.x = this.position.x;
+                    // that.boxGeometry.cube.position.y = this.position.y;
+                    // that.boxGeometry.cube.position.z = this.position.z;
+                }
+                // that.boxGeometry.cube.position.x = target.x;
+                // that.boxGeometry.cube.position.y = target.y;
+                // that.boxGeometry.cube.position.z = target.z;
+            });
+            this.tween.start();
+            
         };
 
         animate = function() {
             //for moving effect
-            console.log("animate unimplemented");
+            console.log("andimate unimplemented");
         };
 
         cube = function() {
-            this.value = Math.pow(this.value, 3);
+            // this.value = Math.pow(this.value, 3);
+
+            this.value += this.value;
         };
 
         getPosition = function() {
@@ -91,38 +138,48 @@ var Cube = (function(init) {
         };
 
         setPosition = function(pos) {
-            this.position.x = pos.x;
-            this.position.y = pos.y;
-            this.position.z = pos.z;
+            this.oldposition.x = this.position.x = pos.x;
+            this.oldposition.y = this.position.y = pos.y;
+            this.oldposition.z = this.position.z = pos.z;
         };
 
         destroy = function() {
             //add in animation
             console.log("destroyed");
+            scene.remove(this.boxGeometry.cube);
         };
 
+        update = function() {
+            if(this.tween) {
+                this.tween.update();
+            }
+
+        };
+        
+
+        // createGeometry();
 
         return {
             moveTo: moveTo,
             animate: animate,
             value: value,
             position: position,
+            oldposition: oldposition,
             cube: cube,
             getPosition: getPosition,
             setPosition: setPosition,
             destroy: destroy,
-            createGeometry: createGeometry
+            boxGeometry: this.boxGeometry,
+            createGeometry: createGeometry,
+            update: update
         }
     }());
 
     var newBox = function(pos) {
         var box = Object.create(Box);
-        // box.position.x = pos.x;
-        // box.position.y = pos.y;
-        // box.position.z = pos.z;
-        debugger;
         box.setPosition(pos);
         box.createGeometry();
+        toUpdate.push(box);
         return box;
     };
 
@@ -132,16 +189,33 @@ var Cube = (function(init) {
         return F;
     };
 
+    var addRandomCube = function() {
+        // var i, possiblePositions = [];
+        // for (i = 0; i < boxes.length; i++) {
+        //     if(boxes[i].value === 0) {
+        //         possiblePositions.push(i);
+        //     }
+        // }
+        // var pos = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
+        // debugger;
+        // boxes[pos] = newBox(toXYZ(pos));
+    };
+
     reset = function() {
         var i;
         boxes = [];
-        for (i = 0; i < 3 * SQUARE_SIZE; i++) {
+        for (i = 0; i < NUM_BOXES; i++) {
+            boxes[i] = newEmptyBox(toXYZ(i));
+        };
+        // for (i = 0; i < NUM_BOXES; i++) {
+        //     boxes[i] = newBox(toXYZ(i));
+        // };
+        for (i = 0; i < NUM_BOXES; i+= DIM) {
             boxes[i] = newBox(toXYZ(i));
         };
+        // boxes[1] = newBox(toXYZ(1));
     };
 
-    //for debugging purposes
-    //visualization inside console
     printCube = function() {
         var i,
             str = "\n";
@@ -157,6 +231,18 @@ var Cube = (function(init) {
         console.log(str);
     }
 
+    getBoxes = function() {
+        var temp = [],
+            i = 0;
+        for(i = 0; i < boxes.length; i++ )
+        {
+            if(boxes[i].value != 0) {
+                temp.push(boxes[i]);
+            }
+        }
+        return temp;
+    }
+
 
     //start:    position of block we're checking for
     //dir:      [-1,1] direction of trace
@@ -166,61 +252,44 @@ var Cube = (function(init) {
         var i,
             pos = start,
             didHit = false,
-            initVal = boxes[start].value,
-            movedBox;
+            startBox = boxes[start],
+            initVal = startBox.value,
+            moved = false;
 
-
-        if (i < 0 || initVal === 0) {
-            return {
-                position: pos,
-                hit: didHit
-            }
-        }
-
-
-        //start one ahead of current box we're checking for
-        //since we can be iterating towards the front of the array,
-        //stop may be less than start, so multiply by direction to make check positive
+        // //start one ahead of current box we're checking for
+        // //since we can be iterating towards the front of the array,
+        // //stop may be less than start, so multiply by direction to make check positive
+        
         for (i = start + (skip * dir);
             (stop - i) * dir >= 0; i += skip * dir) {
 
-            if (boxes[i].value === initVal) {
-                didHit = true;
+            if(boxes[i].value === 0) {
                 pos = i;
-                movedBox = boxes[start];
-
-                boxes[i].destroy();
-                movedBox.cube();
-                movedBox.moveTo(toXYZ(i));
-                boxes[i] = movedBox;
-                boxes[start] = newEmptyBox();
-                return {
-                    position: pos,
-                    hit: didHit
-                }
-            } else if (boxes[i].value === 0) {
                 didHit = false;
+            } else if (boxes[i].value === initVal) {
                 pos = i;
-            } else {
                 didHit = true;
-                pos = i;
-                boxes[start].moveTo(toXYZ(i));
-                boxes[i - (skip * dir)] = boxes[start];
-                boxes[start] = newEmptyBox();
-                return {
-                    position: pos,
-                    hit: didHit
-                }
             }
-        };
+        }
+        if(pos !== start) {
+            moved = true;
+            boxes[pos].destroy;
+            if(didHit) {
+                startBox.cube();
+            }
+            console.log(pos);
+            console.log(toXYZ(pos));
+            console.log(startBox.position);
 
-        //move box to end
-        boxes[start].moveTo(toXYZ(i));
-        boxes[i - (skip * dir)] = boxes[start];
-        boxes[start] = newEmptyBox();
+            startBox.moveTo(toXYZ(pos));
+            boxes[pos] = startBox;
+            boxes[start] = newEmptyBox();
+            
+        }
         return {
             position: pos,
-            hit: didHit
+            hit: didHit,
+            moved: moved
         }
     }
 
@@ -229,10 +298,14 @@ var Cube = (function(init) {
         var row, square,
             z, x, y,
             firstShift;
+
         for (x = DIM - 1; x < NUM_BOXES; x += DIM) {
             for (var i = (x - 1); i > x - DIM; i--) {
                 firstShift = checkAhead(i, 1, 1, x);
             }
+        }
+        if(firstShift.moved===true) {
+            addRandomCube();
         }
     }
 
@@ -248,6 +321,9 @@ var Cube = (function(init) {
                 firstShift = checkAhead(i, -1, 1, x);
             }
         }
+        if(firstShift.moved===true) {
+            addRandomCube();
+        }
     }
 
     //right left working
@@ -261,6 +337,9 @@ var Cube = (function(init) {
                 firstShift = checkAhead(x, -1, DIM, y);
             }
         }
+        if(firstShift.moved===true) {
+            addRandomCube();
+        }
     }
 
     shiftDown = function() {
@@ -272,6 +351,9 @@ var Cube = (function(init) {
                 firstShift = checkAhead(x, 1, DIM, y);
             }
         }
+        if(firstShift.moved===true) {
+            addRandomCube();
+        }
     }
 
     shiftBackward = function() {
@@ -279,10 +361,14 @@ var Cube = (function(init) {
 
         var y, x,
             firstShift;
-        for (y = NUM_BOXES - SQUARE_SIZE; y > 0; y -= SQUARE_SIZE) {
+
+        for (y = NUM_BOXES - (2*SQUARE_SIZE); y > 0; y -= SQUARE_SIZE) {
             for (x = y; x >= y - SQUARE_SIZE; x--) {
                 firstShift = checkAhead(x, 1, SQUARE_SIZE, NUM_BOXES - 1);
             }
+        }
+        if(firstShift.moved===true) {
+            addRandomCube();
         }
     }
 
@@ -296,7 +382,9 @@ var Cube = (function(init) {
                 firstShift = checkAhead(x, -1, SQUARE_SIZE, 0);
             }
         }
-
+        if(firstShift.moved===true) {
+            addRandomCube();
+        }
     }
 
     return {
@@ -307,7 +395,8 @@ var Cube = (function(init) {
         shiftUp: shiftUp,
         shiftDown: shiftDown,
         shiftBackward: shiftBackward,
-        shiftForward: shiftForward
+        shiftForward: shiftForward,
+        getBoxes: getBoxes
     }
 }({
     scale: 10,
@@ -315,5 +404,6 @@ var Cube = (function(init) {
 }));
 
 //testing
+
 Cube.reset();
 Cube.printCube();
