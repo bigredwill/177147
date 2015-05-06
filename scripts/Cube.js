@@ -1,20 +1,20 @@
 var Cube = (function(init) {
-
+    
 
     //CONSTANTS
-    var DIM, ROW_SIZE, NUM_BOXES, SQUARE_SIZE, SCALE;
+    var DIM, NUM_BOXES, SQUARE_SIZE, SCALE, gameColors;
 
-    DIM = ROW_SIZE = init.dim;
-    NUM_BOXES = Math.pow(ROW_SIZE, 3);
-    SQUARE_SIZE = Math.pow(ROW_SIZE, 2);
-
-    SCALE = init.scale;
-
-    //
+    DIM = init.DIM;
+    NUM_BOXES = Math.pow(DIM, 3);
+    SQUARE_SIZE = Math.pow(DIM, 2);
+    SCALE = init.SCALE;
+    gameColors = init.CubeColors;
+    
+    //holds current game tiles
     var boxes = [];
+    var boundingBox;
 
-    var blocks,
-        Box,
+    var Box,    
         shiftRight,
         shiftLeft,
         printCube,
@@ -24,13 +24,32 @@ var Cube = (function(init) {
         shiftBackward,
         shiftForward;
 
+    var drawBoundingBox = function() {
+        if(boundingBox) {
+            scene.remove(boundingBox);
+        }
+        var cube = new THREE.Mesh(
+            new THREE.CubeGeometry(DIM*SCALE, DIM*SCALE, DIM*SCALE),
+            new THREE.MeshBasicMaterial({
+                wireframe: true,
+                color: 'black'
+            })
+        );
+        cube.position.x += DIM*SCALE/2 + 4;
+        cube.position.y = cube.position.z -= DIM*SCALE/2 + 4;
+        scene.add(cube); 
+        boundingBox = cube;
+    }
+
+    drawBoundingBox();
+
     var toXYZ = function(pos) {
         var x, y, z;
 
 
         z = 1 + ((pos - (pos % SQUARE_SIZE)) / SQUARE_SIZE);
-        y = 1 + (((pos - (pos % ROW_SIZE)) / ROW_SIZE) % SQUARE_SIZE % ROW_SIZE);
-        x = 1 + ((pos) % ROW_SIZE);
+        y = 1 + (((pos - (pos % DIM)) / DIM) % DIM % DIM);
+        x = 1 + ((pos) % DIM);
 
         x = x * SCALE;
         y = y * SCALE * -1;
@@ -47,12 +66,12 @@ var Cube = (function(init) {
     var Box = (function() {
         var x, y, z,
             moveTo,
-            animate,
-            cube,
+            add,
             destroy,
             getPosition,
             setPosition,
             createGeometry,
+            updateCanvas,
             update;
 
         this.boxGeometry;
@@ -70,20 +89,31 @@ var Cube = (function(init) {
         };
 
         this.tween;
-
-
         this.value = DIM;
 
         createGeometry = function() {
-
+            var size = 4;
             this.boxGeometry = {};
-            this.boxGeometry.geometry = new THREE.BoxGeometry(4, 4, 4);
+            this.boxGeometry.geometry = new THREE.BoxGeometry(size,size,size);
+            
+            var _c = document.createElement("canvas");
+            var _cx = _c.getContext("2d");
+            _c.width = _c.height = 64;
+            _cx.shadowColor = "#000";
+            _cx.shadowBlur = 7;
+            _cx.fillStyle = gameColors[(this.value / DIM)-1];
+            _cx.fillRect(0, 0, 64, 64);
+            _cx.fillStyle = "black";
+            _cx.font = "12pt arial bold";
+            _cx.fillText(this.value, 10,32);
 
-            this.boxGeometry.material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, shading: THREE.FlatShading });
+            this._cx = _cx;
+            this._c = _c;
+
+            this.boxGeometry.material = new THREE.MeshBasicMaterial({ map: new THREE.Texture(this._c), transparent: true });
+            this.boxGeometry.material.map.needsUpdate = true;
+
             var cube = new THREE.Mesh(this.boxGeometry.geometry, this.boxGeometry.material);
-
-            // console.log("x: "+ this.position.x + " y: "+this.position.y + " z: "+ this.position.z);
-
             cube.position.x = this.position.x;
             cube.position.y = this.position.y;
             cube.position.z = this.position.z;
@@ -91,46 +121,45 @@ var Cube = (function(init) {
             scene.add(this.boxGeometry.cube);
         };
 
+        updateCanvas = function() {
+            var _c = this._c,
+                _cx = this._cx;
+
+
+            _cx.fillStyle = gameColors[(this.value / DIM)-1];
+            _cx.fillRect(0, 0, 64, 64);
+            _cx.fillStyle = "black";
+            _cx.font = "12pt arial bold";
+            _cx.fillText(this.value, 10,32);
+            this.boxGeometry.material.map.needsUpdate = true;
+
+            this._cx = _cx;
+            this._c = _c;
+        }
+
         moveTo = function(pos) {
             this.oldposition = this.position;
             this.position = pos;
 
-            var position = this.oldposition;
-            var target = pos;
-            // debugger;
-            // this.tween = new TWEEN.Tween(position).to(target, 1000);
-            // this.tween = new TWEEN.Tween(position).to(target, 1000);
-            this.tween = new TWEEN.Tween({
-                x: "10"
-            }).to({
-                x: "20"
-            }, 1000);
+            this.tween = new TWEEN.Tween(this.oldposition).to(pos, 1000);
             var that = this;
             this.tween.onUpdate(function(){
-                //tween object is not getting passed through
-                debugger;
-                if(position) {
-                    that.boxGeometry.cube.position.x = this.position.x;
-                    // that.boxGeometry.cube.position.y = this.position.y;
-                    // that.boxGeometry.cube.position.z = this.position.z;
+
+                if(that.boxGeometry) {
+                    that.boxGeometry.cube.position.x = this.x;
+                    that.boxGeometry.cube.position.y = this.y;
+                    that.boxGeometry.cube.position.z = this.z;
                 }
-                // that.boxGeometry.cube.position.x = target.x;
-                // that.boxGeometry.cube.position.y = target.y;
-                // that.boxGeometry.cube.position.z = target.z;
             });
             this.tween.start();
             
         };
 
-        animate = function() {
-            //for moving effect
-            console.log("andimate unimplemented");
-        };
-
-        cube = function() {
+        add = function() {
             // this.value = Math.pow(this.value, 3);
 
             this.value += this.value;
+            this.updateCanvas();
         };
 
         getPosition = function() {
@@ -146,85 +175,93 @@ var Cube = (function(init) {
         destroy = function() {
             //add in animation
             console.log("destroyed");
-            scene.remove(this.boxGeometry.cube);
-        };
-
-        update = function() {
-            if(this.tween) {
-                this.tween.update();
+            if(this.boxGeometry){
+                var that = this;
+                scene.remove(that.boxGeometry.cube);
             }
 
         };
-        
 
-        // createGeometry();
+        update = function() {
+        };
 
         return {
             moveTo: moveTo,
-            animate: animate,
             value: value,
             position: position,
             oldposition: oldposition,
-            cube: cube,
+            add: add,
             getPosition: getPosition,
             setPosition: setPosition,
             destroy: destroy,
             boxGeometry: this.boxGeometry,
             createGeometry: createGeometry,
-            update: update
+            update: update,
+            updateCanvas: updateCanvas
         }
     }());
 
     var newBox = function(pos) {
         var box = Object.create(Box);
         box.setPosition(pos);
+        box.value = DIM;
         box.createGeometry();
         toUpdate.push(box);
         return box;
     };
 
-    var newEmptyBox = function() {
-        var F = Object.create(Box);
-        F.value = 0;
-        return F;
+    var newEmptyBox = function(pos) {
+        var box = Object.create(Box);
+        // box.setPosition(pos);
+        box.value = 0;
+        return box;
     };
 
     var addRandomCube = function() {
-        // var i, possiblePositions = [];
-        // for (i = 0; i < boxes.length; i++) {
-        //     if(boxes[i].value === 0) {
-        //         possiblePositions.push(i);
-        //     }
-        // }
-        // var pos = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
-        // debugger;
-        // boxes[pos] = newBox(toXYZ(pos));
+        var i, possiblePositions = [];
+        for (i = 0; i < boxes.length; i++) {
+            if(boxes[i].value === 0) {
+                possiblePositions.push(i);
+            }
+        }
+        var pos = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
+        boxes[pos] = newBox(toXYZ(pos));
     };
 
-    reset = function() {
+    reset = function(init) {
         var i;
+        //remove all existing game objects
+        for(i = 0; i < NUM_BOXES; i++) {
+            if(boxes[i]) {
+                boxes[i].destroy();
+            }
+        }
+        //reset "constants"
+        DIM = init.DIM;
+        NUM_BOXES = Math.pow(DIM, 3);
+        SQUARE_SIZE = Math.pow(DIM, 2);
+        SCALE = init.SCALE;
+        //add new game objects
         boxes = [];
         for (i = 0; i < NUM_BOXES; i++) {
             boxes[i] = newEmptyBox(toXYZ(i));
         };
-        // for (i = 0; i < NUM_BOXES; i++) {
-        //     boxes[i] = newBox(toXYZ(i));
-        // };
-        for (i = 0; i < NUM_BOXES; i+= DIM) {
-            boxes[i] = newBox(toXYZ(i));
+        for (i = 0; i < DIM; i++) {
+            addRandomCube();
         };
-        // boxes[1] = newBox(toXYZ(1));
+
+        drawBoundingBox();
     };
 
     printCube = function() {
         var i,
             str = "\n";
         for (i = 0; i < boxes.length; i++) {
-            if (i !== 0 && i % ROW_SIZE === 0) {
+            if (i !== 0 && i % DIM === 0) {
                 str += "\n";
             }
             if (i !== 0 && i % SQUARE_SIZE === 0) {
-                str += "\n";
+                str += "_________\n";
             }
             str += boxes[i].value + " ";
         };
@@ -256,13 +293,11 @@ var Cube = (function(init) {
             initVal = startBox.value,
             moved = false;
 
-        // //start one ahead of current box we're checking for
-        // //since we can be iterating towards the front of the array,
-        // //stop may be less than start, so multiply by direction to make check positive
+        //start one ahead of current box we're checking for
+        //since we can be iterating towards the front of the array,
+        //stop may be less than start, so multiply by direction to make check positive
         
-        for (i = start + (skip * dir);
-            (stop - i) * dir >= 0; i += skip * dir) {
-
+        for (i = (start + (skip * dir)); ((stop - i) * dir) >= 0; i += (skip * dir)) {
             if(boxes[i].value === 0) {
                 pos = i;
                 didHit = false;
@@ -273,13 +308,11 @@ var Cube = (function(init) {
         }
         if(pos !== start) {
             moved = true;
-            boxes[pos].destroy;
+            
             if(didHit) {
-                startBox.cube();
+                startBox.add();
+                boxes[pos].destroy();
             }
-            console.log(pos);
-            console.log(toXYZ(pos));
-            console.log(startBox.position);
 
             startBox.moveTo(toXYZ(pos));
             boxes[pos] = startBox;
@@ -376,18 +409,30 @@ var Cube = (function(init) {
         console.log("shiftForward");
 
         var y, x,
-            firstShift;
+            firstShift,
+            moved = false;
         for (y = SQUARE_SIZE; y < NUM_BOXES; y += SQUARE_SIZE) {
             for (x = y; x < y + SQUARE_SIZE; x++) {
                 firstShift = checkAhead(x, -1, SQUARE_SIZE, 0);
+                if(firstShift.moved && !moved) {
+                    moved = true;
+                }
             }
         }
-        if(firstShift.moved===true) {
+        if(moved) {
             addRandomCube();
         }
     }
 
+    getCenterCoordinate = function() {
+        return toXYZ(Math.floor(NUM_BOXES/2));
+    }
+    
+    var lookat_ = this.getCenterCoordinate();
+    controls.target = new THREE.Vector3(lookat_.x,lookat_.y,lookat_.z);
+
     return {
+        boundingBox: boundingBox,
         shiftRight: shiftRight,
         shiftLeft: shiftLeft,
         printCube: printCube,
@@ -399,11 +444,18 @@ var Cube = (function(init) {
         getBoxes: getBoxes
     }
 }({
-    scale: 10,
-    dim: 3
+    CubeColors: ["#779986", "#88DEB0","#44FA98","#20FF88", "#1AFF84","#FFDBC7","#FFC9AC", "#FFB993", "#FFAA7D", "#FF9D68", "#FF0000"],
+    SCALE: 10,
+    DIM: 1
 }));
 
 //testing
 
-Cube.reset();
+//parameters optional
+Cube.reset({
+    // CubeColors: ["#779986", "#88DEB0","#44FA98","#20FF88", "#1AFF84","#FFDBC7","#FFC9AC", "#FFB993", "#FFAA7D", "#FF9D68", "#FF0000"],
+    // TextColors = [],
+    SCALE: 10,
+    DIM: 4
+});
 Cube.printCube();
