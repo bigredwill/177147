@@ -26,7 +26,7 @@ var Cube = (function(init) {
 
     var drawBoundingBox = function() {
         if(boundingBox) {
-            _177147.scene.remove(boundingBox);
+            scene.remove(boundingBox);
         }
         var cube = new THREE.Mesh(
             new THREE.CubeGeometry(DIM*SCALE, DIM*SCALE, DIM*SCALE),
@@ -37,7 +37,7 @@ var Cube = (function(init) {
         );
         cube.position.x += DIM*SCALE/2 + 4;
         cube.position.y = cube.position.z -= DIM*SCALE/2 + 4;
-        _177147.scene.add(cube); 
+        scene.add(cube); 
         boundingBox = cube;
     }
 
@@ -90,6 +90,7 @@ var Cube = (function(init) {
 
         // this.tween;
         this.value = DIM;
+
         this.level;
         createGeometry = function() {
             this.level = 1;
@@ -120,7 +121,7 @@ var Cube = (function(init) {
             cube.position.y = this.position.y;
             cube.position.z = this.position.z;
             this.boxGeometry.cube = cube;
-            _177147.scene.add(this.boxGeometry.cube);
+            scene.add(this.boxGeometry.cube);
         };
 
         updateCanvas = function() {
@@ -170,6 +171,12 @@ var Cube = (function(init) {
             oldposition = this.position;
             this.position = pos;
             console.log(pos);
+            // oldposition.x = this.position.x;
+            // oldposition.y = this.position.y;
+            // oldposition.z = this.position.z;
+            // this.position.x = pos.x;
+            // this.position.y = pos.y;
+            // this.position.z = pos.z;
         };
 
         destroy = function() {
@@ -177,7 +184,7 @@ var Cube = (function(init) {
             console.log("destroyed");
             if(this.boxGeometry){
                 var that = this;
-                _177147.scene.remove(that.boxGeometry.cube);
+                scene.remove(that.boxGeometry.cube);
             }
 
         };
@@ -206,7 +213,7 @@ var Cube = (function(init) {
         box.setPosition(pos);
         box.value = DIM;
         box.createGeometry();
-        _177147.toUpdate.push(box);
+        toUpdate.push(box);
         return box;
     };
 
@@ -225,6 +232,9 @@ var Cube = (function(init) {
         }
         var pos = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
         boxes[pos] = newBox(toXYZ(pos));
+        console.log(boxes[pos].oldposition);
+
+        console.log(boxes[pos].position);
     };
 
     getCenterCoordinate = function() {
@@ -250,13 +260,17 @@ var Cube = (function(init) {
         for (i = 0; i < NUM_BOXES; i++) {
             boxes[i] = newEmptyBox();
         };
-        for (i = 0; i < DIM; i++) {
-            addRandomCube();
-        };
+        // for (i = 0; i < DIM; i++) {
+        //     addRandomCube();
+        // };
 
 
         var lookat_ = boundingBox.position;
-        _177147.controls.target.set(lookat_.x + (DIM*SCALE)/2,lookat_.y - (DIM*SCALE)/2,lookat_.z - + (DIM*SCALE)/2);
+        controls.target.set(lookat_.x + (DIM*SCALE)/2,lookat_.y - (DIM*SCALE)/2,lookat_.z - + (DIM*SCALE)/2);
+        boxes[16] = newBox(toXYZ(16));
+        boxes[33] = newBox(toXYZ(33));
+        boxes[49] = newBox(toXYZ(49));
+
         drawBoundingBox();
     };
 
@@ -477,4 +491,4 @@ Cube.reset({
     SCALE: 10,
     DIM: 4
 });
-// Cube.printCube();
+Cube.printCube();

@@ -3,8 +3,10 @@
 3^11 = 177147
 ======
 
-2048 in 3d, my first venture in in browser 3d.
+Basically 2048 in three dimensions.  I chose 3^11 = 177147 as the name, but since refactoring my code the cube dimension can be as big as computationally allowable.
 
-Wanted to get my hands dirty with Three.js and this is what I came up with.
+Todo:
+  1. Add GUI. This includes score, new game setup, misc info, etc.
+  2. Clean up code. (I learned THREEjs and working with 3d graphics while doing this, so some sections are a little messy).
 
-Though the cube view does not work perfectly, the model of the cube works very well.
+If you see anything you'd like to fix please send a pull request! This was a learning project, so please help me learn :)
