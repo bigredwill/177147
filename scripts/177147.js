@@ -46,6 +46,7 @@ window._177147 = {
     text3.rotation = axes.rotation;
     text3.rotateOnAxis({x:0, y: 1, z:0}, Math.PI/2);
     this.scene.add(text3);
+    //set to invisible
     return function() {
       axes.visible = !axes.visible;
       text1.visible = !text1.visible;
@@ -95,7 +96,9 @@ window._177147 = {
   },
   init: function() {
     this.renderer.setSize( window.innerWidth, window.innerHeight ); 
-    this.renderer.setClearColor(new THREE.Color(0xbada99));    
+    // this.renderer.setClearColor(new THREE.Color(0xbada99));
+    // this.renderer.setClearColor(new THREE.Color(0xf8fbee));
+    this.renderer.setClearColor(new THREE.Color(0xc1d4ff));
     document.body.appendChild( this.renderer.domElement );
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement),
     this.camera.position.set( 20,20,30 );
@@ -115,6 +118,21 @@ _177147.init();
   $("#axes_toggle").click(function() {
     _177147.axes();
     event.preventDefault();
+  });
+  $("#bottom_tab").click(function() {
+    var ani = {
+      top: "-100px"
+    };
+    var finish = function() {
+      $("#bottom_tab").text("help");
+    };
+    if($("#banner").position().top === -100) {
+      ani.top = "0px";
+      finish = function() {
+        $("#bottom_tab").text("close");
+      };
+    }
+    $("#banner").animate(ani, 200, finish);
   });
 })();
 

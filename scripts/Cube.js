@@ -42,6 +42,7 @@ _177147.Cube = (function(init) {
                 color: 'black'
             })
         );
+        
         cube.position.x += DIM*SCALE/2 + 4;
         cube.position.y = cube.position.z -= DIM*SCALE/2 + 4;
         _177147.scene.add(cube); 
@@ -103,11 +104,10 @@ _177147.Cube = (function(init) {
             var size = 4;
             this.boxGeometry = {};
             this.boxGeometry.geometry = new THREE.BoxGeometry(size,size,size);
-            
             var _c = document.createElement("canvas");
             var _cx = _c.getContext("2d");
             _c.width = _c.height = 128;
-            _cx.shadowColor = "#000";
+            _cx.shadowColor = "#fff";
             _cx.shadowBlur = 7;
 
             _cx.fillStyle = gameColors[this.level-1] || "white";
@@ -178,9 +178,8 @@ _177147.Cube = (function(init) {
         setPosition = function(pos) {
             oldposition = this.position;
             this.position = pos;
-            var tween = new TWEEN.Tween({s:0.01}).to({s:1}, 200).delay(400);
             var that = this;
-
+            var tween = new TWEEN.Tween({s:0.01}).to({s:1}, 200).delay(400);
             tween.onStart(function () {
                 if(that.boxGeometry) {
                     that.boxGeometry.cube.visible = true;
@@ -189,8 +188,6 @@ _177147.Cube = (function(init) {
             tween.onUpdate(function(){
                 if(that.boxGeometry) {
                     s = this.s;
-
-                    console.log(s);
                     that.boxGeometry.cube.scale.set(s,s,s);
                 }
             });
@@ -201,7 +198,21 @@ _177147.Cube = (function(init) {
             //could add animation
             if(this.boxGeometry){
                 var that = this;
-                _177147.scene.remove(that.boxGeometry.cube);
+                var tween = new TWEEN.Tween({s:1}).to({s:2}, 500).to({s:0.1}, 100)
+                .delay(200)
+                .easing(TWEEN.Easing.Bounce.Out)
+                .onUpdate(function(){
+                    if(that.boxGeometry) {
+                        s = this.s;
+                        that.boxGeometry.cube.scale.set(s,s,s);
+                    }
+                })
+                .onComplete(function(){
+                    _177147.scene.remove(that.boxGeometry.cube);
+                })
+                .start();
+
+                
             }
 
         };
@@ -252,7 +263,8 @@ _177147.Cube = (function(init) {
     };
 
     getCenterCoordinate = function() {
-        return toXYZ(Math.ceil(NUM_BOXES/2));
+        debugger;
+        return boundingBox.center();
     }
 
     reset = function(init) {
@@ -283,8 +295,7 @@ _177147.Cube = (function(init) {
 
         drawBoundingBox();
         var lookat_ = boundingBox.position;
-        _177147.controls.target.set(lookat_.x + (DIM*SCALE)/4,lookat_.y - (DIM*SCALE)/4,lookat_.z - (DIM*SCALE)/4);
-        
+        _177147.controls.target.set(lookat_.x,lookat_.y,lookat_.z);
     };
 
     printCube = function() {

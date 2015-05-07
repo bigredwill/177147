@@ -10,9 +10,10 @@ canvas {
   position: fixed;
   top: 0;
   left: 0;
-  background-color: rgba(0,0,0,0.25);
+  background-color: rgba(255,185,2,1);
   height: 100px;
   width: 100%;
+  box-shadow: 0px 2px 5px #888888;
 }
 
 #score {
@@ -27,12 +28,11 @@ canvas {
 
 #bottom_tab {
   
-   background-color: rgba(0,0,0,0.25);
+   background-color: rgba(136,108,133,1);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
-  position: fixed;
+  position: relative;
   height: 20px;
-  top: 100px;
   width: 40px;
   margin-left: 50%;
   left: -20px;
@@ -40,12 +40,22 @@ canvas {
   color: rgba(0,0,0,0.5);
  
   &:hover {
-    background-color: rgba(255,0,0,0.25);
+    background-color: rgba(100,108,133,0.5);
     cursor: pointer;
   }
 }
 
-
+#find_me {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+}
+a {
+  color: black;
+  &:hover {
+    color: rgba(100,108,133,0.5);
+  }
+}
 form {
   margin-left: 60px;
 }
