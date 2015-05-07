@@ -51,19 +51,31 @@ _177147.Cube = (function(init) {
 
     drawBoundingBox();
 
-    var toXYZ = function(pos) {
+    var posToXYZ = function(pos) {
+        var x, y, z;
+
+        var _3d = posTo3DSpace(pos);
+
+        x = _3d.x * SCALE;
+        y = _3d.y * SCALE * -1;
+        z = _3d.z * SCALE * -1;
+
+        
+        return {
+            x: x,
+            y: y,
+            z: z 
+        }
+    };
+
+    var posTo3DSpace = function(pos) {
         var x, y, z;
 
 
         z = 1 + ((pos - (pos % SQUARE_SIZE)) / SQUARE_SIZE);
         y = 1 + (((pos - (pos % DIM)) / DIM) % DIM % DIM);
         x = 1 + ((pos) % DIM);
-
-        x = x * SCALE;
-        y = y * SCALE * -1;
-        z = z * SCALE * -1;
-
-        // console.log("pos: "+ pos +" x: " + x + " y: " + y + " z: " + z);
+        
         return {
             x: x,
             y: y,
@@ -165,7 +177,7 @@ _177147.Cube = (function(init) {
 
         add = function() {
             this.level++;
-            this.value += this.value;
+            this.value += DIM;
             gamescore += this.value;
             onScore(gamescore);
             this.updateCanvas();
@@ -259,7 +271,7 @@ _177147.Cube = (function(init) {
             }
         }
         var pos = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
-        boxes[pos] = newBox(toXYZ(pos));
+        boxes[pos] = newBox(posToXYZ(pos));
     };
 
     getCenterCoordinate = function() {
@@ -313,7 +325,7 @@ _177147.Cube = (function(init) {
         console.log(str);
     }
 
-    getBoxes = function() {
+    getValuedBoxes = function() {
         var temp = [],
             i = 0;
         for(i = 0; i < boxes.length; i++ )
@@ -324,6 +336,28 @@ _177147.Cube = (function(init) {
         }
         return temp;
     }
+
+    getBoxArray = function() {
+        var temp = [],
+            i = 0,
+            _b, _3d;
+        for(i = 0; i < boxes.length; i++ )
+        {
+            _b = boxes[i];
+            _3d = posTo3DSpace(i);
+            temp.push({
+                arrayPosition: i,
+                value: _b.value,
+                position: {
+                    x: _3d.x,
+                    y: _3d.y,
+                    z: _3d.z
+                }
+            });
+        }
+        return temp;
+    }
+
 
 
     //start:    position of block we're checking for
@@ -361,7 +395,7 @@ _177147.Cube = (function(init) {
                 boxes[pos].destroy();
             }
 
-            startBox.moveTo(toXYZ(pos));
+            startBox.moveTo(posToXYZ(pos));
             boxes[pos] = startBox;
             boxes[start] = newEmptyBox();
             
@@ -453,8 +487,13 @@ _177147.Cube = (function(init) {
         }
     }
 
-    //still bug
-    //skips 2nd to last
+    /*
+        Bug
+        ex 
+            3 3 6 -> 0 0 12
+        Combines all in row rather than first available.
+        Is it starting from back to front?
+    */
     shiftBackward = function() {
         console.log("shift backward");
         var y, x,
@@ -502,7 +541,8 @@ _177147.Cube = (function(init) {
         shiftDown: shiftDown,
         shiftBackward: shiftBackward,
         shiftForward: shiftForward,
-        getBoxes: getBoxes
+        getValuedBoxes: getValuedBoxes,
+        getBoxArray: getBoxArray
     }
 }({
     CubeColors: ["#779986", "#88DEB0","#44FA98","#20FF88", "#1AFF84","#FFDBC7","#FFC9AC", "#FFB993", "#FFAA7D", "#FF9D68", "#FF0000"],

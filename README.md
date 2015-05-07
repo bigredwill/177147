@@ -3,10 +3,17 @@
 3^11 = 177147
 ======
 
-Basically 2048 in three dimensions.  I chose 3^11 = 177147 as the name, but since refactoring my code the cube dimension can be as big as computationally allowable.
+[Play test! wsimons.com/177147]("wsimons.com/177147")
 
-Todo:
-  1. Add GUI. This includes score, new game setup, misc info, etc.
-  2. Clean up code. (I learned THREEjs and working with 3d graphics while doing this, so some sections are a little messy).
+A 3D cube slider game, inspired by Threes and 2048.
+
+Basically Threes in three dimensions.  I initially chose 3^11 = 177147 as the name, but the numbers became too large and scary when squaring them so now it's just adding them.  The name should be 3*11 = 33.
+
+
+
 
 If you see anything you'd like to fix please send a pull request! This was a learning project, so please help me learn :)
+###Todo:
+  
+  1. Clean up code. (I learned THREEjs and working with 3d graphics while doing this, so some sections are a little messy).
+
