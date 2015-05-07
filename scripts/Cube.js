@@ -1,4 +1,4 @@
-var Cube = (function(init) {
+_177147.Cube = (function(init) {
     
 
     //CONSTANTS
@@ -10,9 +10,16 @@ var Cube = (function(init) {
     SCALE = init.SCALE;
     gameColors = init.CubeColors;
     
+
+
+    var onScore = init.onScore,
+        onGameOver = init.onGameOver;
+
+
     //holds current game tiles
-    var boxes = [];
-    var boundingBox;
+    var boxes = [],
+        boundingBox,
+        gamescore;
 
     var Box,    
         shiftRight,
@@ -99,15 +106,15 @@ var Cube = (function(init) {
             
             var _c = document.createElement("canvas");
             var _cx = _c.getContext("2d");
-            _c.width = _c.height = 64;
+            _c.width = _c.height = 128;
             _cx.shadowColor = "#000";
             _cx.shadowBlur = 7;
 
             _cx.fillStyle = gameColors[this.level-1] || "white";
-            _cx.fillRect(0, 0, 64, 64);
+            _cx.fillRect(0, 0, 128, 128);
             _cx.fillStyle = "black";
-            _cx.font = "12pt arial bold";
-            _cx.fillText(this.value, 10,32);
+            _cx.font = "32pt arial bold";
+            _cx.fillText(this.value, 10,64);
 
             this._cx = _cx;
             this._c = _c;
@@ -119,6 +126,7 @@ var Cube = (function(init) {
             cube.position.x = this.position.x;
             cube.position.y = this.position.y;
             cube.position.z = this.position.z;
+            cube.visible = false;
             this.boxGeometry.cube = cube;
             _177147.scene.add(this.boxGeometry.cube);
         };
@@ -128,11 +136,11 @@ var Cube = (function(init) {
                 _cx = this._cx;
 
 
-            _cx.fillStyle = gameColors[this.level-1];
-            _cx.fillRect(0, 0, 64, 64);
+            _cx.fillStyle = gameColors[this.level-1] || "white";
+            _cx.fillRect(0, 0, 128, 128);
             _cx.fillStyle = "black";
-            _cx.font = "12pt arial bold";
-            _cx.fillText(this.value, 10,32);
+            _cx.font = "32pt arial bold";
+            _cx.fillText(this.value, 10,64);
             this.boxGeometry.material.map.needsUpdate = true;
 
             this._cx = _cx;
@@ -142,10 +150,10 @@ var Cube = (function(init) {
         moveTo = function(pos) {
             var op = oldposition = this.position;
             this.position = pos;
-            console.log(op.x + " " + op.y +" " + op.z + "\t" + pos.x + " " + pos.y +" " + pos.z);
             var tween = new TWEEN.Tween(oldposition).to(this.position, 400);
             var that = this;
-            tween.onUpdate(function(){
+            tween.easing(TWEEN.Easing.Quadratic.InOut)
+            .onUpdate(function(){
                 if(that.boxGeometry) {
                     that.boxGeometry.cube.position.x = this.x;
                     that.boxGeometry.cube.position.y = this.y;
@@ -153,12 +161,13 @@ var Cube = (function(init) {
                 }
             });
             tween.start();
-            
         };
 
         add = function() {
             this.level++;
             this.value += this.value;
+            gamescore += this.value;
+            onScore(gamescore);
             this.updateCanvas();
         };
 
@@ -169,12 +178,27 @@ var Cube = (function(init) {
         setPosition = function(pos) {
             oldposition = this.position;
             this.position = pos;
-            console.log(pos);
+            var tween = new TWEEN.Tween({s:0.01}).to({s:1}, 200).delay(400);
+            var that = this;
+
+            tween.onStart(function () {
+                if(that.boxGeometry) {
+                    that.boxGeometry.cube.visible = true;
+                }
+            })
+            tween.onUpdate(function(){
+                if(that.boxGeometry) {
+                    s = this.s;
+
+                    console.log(s);
+                    that.boxGeometry.cube.scale.set(s,s,s);
+                }
+            });
+            tween.start();
         };
 
         destroy = function() {
-            //add in animation
-            console.log("destroyed");
+            //could add animation
             if(this.boxGeometry){
                 var that = this;
                 _177147.scene.remove(that.boxGeometry.cube);
@@ -254,10 +278,13 @@ var Cube = (function(init) {
             addRandomCube();
         };
 
+        gamescore = 0;
 
-        var lookat_ = boundingBox.position;
-        _177147.controls.target.set(lookat_.x + (DIM*SCALE)/2,lookat_.y - (DIM*SCALE)/2,lookat_.z - + (DIM*SCALE)/2);
+
         drawBoundingBox();
+        var lookat_ = boundingBox.position;
+        _177147.controls.target.set(lookat_.x + (DIM*SCALE)/4,lookat_.y - (DIM*SCALE)/4,lookat_.z - (DIM*SCALE)/4);
+        
     };
 
     printCube = function() {
@@ -468,13 +495,22 @@ var Cube = (function(init) {
     }
 }({
     CubeColors: ["#779986", "#88DEB0","#44FA98","#20FF88", "#1AFF84","#FFDBC7","#FFC9AC", "#FFB993", "#FFAA7D", "#FF9D68", "#FF0000"],
+    //when score is updated
+    onScore: function(score) {
+        $("#current_score").text(score);
+    },
+    onGameOver: function(score) {
+        if(score > Number($("#high_score").text())) {
+            $("#high_score").text(score);
+        }
+    },
     SCALE: 10,
-    DIM: 1
+    DIM: 3
 }));
 
 //parameters optional
-Cube.reset({
+_177147.Cube.reset({
     SCALE: 10,
-    DIM: 4
+    DIM: 3
 });
 // Cube.printCube();

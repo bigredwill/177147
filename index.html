@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>177417</title>
         <link rel="stylesheet" type="text/css" href="assets/177147.css">
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     </head>
     <body>
         <div id="banner">
@@ -13,13 +14,29 @@
                 <h2>177417</h2>
                 <h3>Controls: <b>w</b>(up) <b>s</b>(down) <b>a</b>(left) <b>d</b>(right) <b>q</b>(forwards) <b>e</b>(backwards) to move cubes.</h3>
             </div>
+            <div class="guiSection">
+                <div class="button" id="axes_toggle">Toggle help axes.</div>
+            </div>
+            <div class="guiSection">
+                <div class="button" id="new_game">New Game:</div>
+                <input type="number" name="quantity" min="2" max="10" value="4">
+            </div>
 
-           <!--  <div class="button" id="banner_toggle">Toggle this banner.</div>
-            <div class="button" id="axes_toggle">Toggle the help axes.</div>
-            <div class="button" id="lines_toggle">Toggle the line helper.</div> -->
+
+            <div id="bottom_tab">^</div>
         </div>
 
-        
+        <div id="score">
+            <div>
+                <h2 id="current_score">0</h2>
+            </div>
+            <div>
+                <h3>High Score</h3>
+                <p id="high_score">0</p>
+            </div> 
+        </div>
+
+
         <script type="text/javascript" src="scripts/lib/Tween.js"></script>
         <script type="text/javascript" src="scripts/lib/three.min.js"></script>
         <script type="text/javascript" src = "scripts/lib/OrbitControls.js"></script>
