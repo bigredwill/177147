@@ -112,7 +112,10 @@ _177147.init();
 
 (function () {
   $("#new_game").click(function() {
-    _177147.Cube.reset({SCALE: 10, DIM: Number(this.nextElementSibling.value)});
+    _177147.Cube.reset({
+      SCALE: 10, 
+      DIM: Number(this.nextElementSibling.value)
+    });
     event.preventDefault();
   });
   $("#axes_toggle").click(function() {

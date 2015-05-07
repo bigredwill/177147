@@ -267,7 +267,7 @@ _177147.Cube = (function(init) {
         return boundingBox.center();
     }
 
-    reset = function(init) {
+    reset = function(rinit) {
 
         var i;
         //remove all existing game objects
@@ -277,10 +277,10 @@ _177147.Cube = (function(init) {
             }
         }
         //reset "constants"
-        DIM = init.DIM;
+        DIM = rinit.DIM || DIM;
         NUM_BOXES = Math.pow(DIM, 3);
         SQUARE_SIZE = Math.pow(DIM, 2);
-        SCALE = init.SCALE;
+        SCALE = rinit.SCALE;
         //add new game objects
         boxes = [];
         for (i = 0; i < NUM_BOXES; i++) {
