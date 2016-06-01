@@ -3,7 +3,7 @@
 3^11 = 177147
 ======
 
-[Play test! wsimons.com/177147]("wsimons.com/177147")
+[Play test! wsimons.com/177147](http://wsimons.com/177147)
 
 A 3D cube slider game, inspired by Threes and 2048.
 
